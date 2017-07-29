@@ -65,18 +65,12 @@ function move(o)
  local ly=o.y -- last y
 
 	if btn(0) then
-  p.x-=p.speed
-  p.flipped=true
- end
- if btn(1) then
-  p.x+=p.speed
-  p.flipped=false
   o.x-=o.speed
-  o.flipped=false
+  o.flipped=true
  end
  if btn(1) then
   o.x+=o.speed
-  o.flipped=true
+  o.flipped=false
  end
  if btn(3) then
   o.y+=o.speed
