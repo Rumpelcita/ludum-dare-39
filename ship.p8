@@ -3,16 +3,26 @@ version 8
 __lua__
 --globals
 is_on_sub=true
-oxygen=100
 score=0
 
+--o2
+o2={}
+o2.m=100
+o2.c=99
+o2.x=12
+o2.y=123
+o2.w=100
+o2.h=2
+o2.clr1=1
+
 --player
-p={}
 p={}
 p.x=64
 p.y=64
 p.w=8
 p.h=8
+p.fnsh=7
+p.pos=3
 p.speed=1
 p.flipped=false
 
@@ -29,24 +39,34 @@ end
 
 function _update()
   move(p)
+  drop_o2()
 end
 
 function _draw()
+	--map
 	rectfill(0,0,128,128,12)
 	map(0,0)
+	
+	--o2
+	print("o2",o2.x-8,o2.y-1,7)
+	rectfill(o2.x, o2.y, o2.x+o2.w,o2.y+o2.h,1)
+	rectfill(o2.x, o2.y, o2.x+o2.c,o2.y+o2.h,7)
 
- spr(016,subm.x-subm.w/2,subm.y,2,2)
- spr(001,p.x-p.w/2,p.y-p.h,1,1,p.flipped)
+	--plyr
+ spr(16,subm.x-subm.w/2,subm.y,2,2)
+ spr(3,p.x-p.w/2,p.y-p.h,1,1,p.flipped)
+	print(o2.c, 15, 15, 7)
+	death()	
 end
 
 function move(actor)
 	if btn(0) then
   p.x-=p.speed
-  p.flipped=false
+  p.flipped=true
  end
  if btn(1) then 
   p.x+=p.speed
-  p.flipped=true
+  p.flipped=false
  end
  if btn(3) then 
   p.y+=p.speed
@@ -55,6 +75,27 @@ function move(actor)
   p.y-=p.speed
  end
 end
+
+function anim(actor)
+	if actor.pos > actor.fnsh then
+  actor.pos+=1
+ end
+end
+
+function drop_o2()
+	if o2.c > 1 and o2.c < 100 then
+		o2.c-=0.1
+	else
+		o2.c=0
+	end
+end
+
+function death()
+	if o2.c == 0 then
+		rectfill(0,0,128,128,0)
+		print("i'm so sorry, you're dead.", 14, 60, 7)
+	end
+end	
 __gfx__
 00000000000000000000000000111100001111000011110000111100001111000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000001eeeee001eeeee001eeeee001eeeee001eeeee00000000000000000000000000000000000000000000000000000000000000000
