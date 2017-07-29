@@ -40,7 +40,7 @@ function _init()
 end
 
 function _update()
-  drop_o2()
+ drop_o2()
 	move(p)
 end
 
@@ -55,9 +55,9 @@ function _draw()
 	rectfill(o2.x, o2.y, o2.x+o2.c,o2.y+o2.h,7)
 
 	--plyr
-	death()
- spr(016,subm.x,subm.y,2,2)
- spr(001,p.x,p.y,1,1,p.flipped)
+ spr(16,subm.x,subm.y,2,2)
+ spr(3,p.x,p.y,1,1,p.flipped)
+ death()	
 end
 
 function move(o)
@@ -430,3 +430,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
