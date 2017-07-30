@@ -3,6 +3,10 @@ version 8
 __lua__
 --globals
 score=0
+enemies={
+ {type="jelly",x=16,y=16,w=8,h=8,s=49,dmg=5},
+ {type="jelly",x=48,y=48,w=8,h=8,s=49,dmg=5}
+}
 tile={}
 tile.x=0
 tile.y=0
@@ -47,26 +51,45 @@ end
 
 function _update()
  drop_o2()
-  move(p)
+ move(p)
+ --collision player enemies
 end
 
 function _draw()
-  --map
-  rectfill(0,0,128,128,12)
-  map(0,0)
+ --map
+ rectfill(0,0,128,128,12)
+ map(0,0)
 
-  --o2
-  print("o2",o2.x-8,o2.y-1,7)
-  rectfill(o2.x, o2.y, o2.x+o2.w,o2.y+o2.h,1)
-  rectfill(o2.x, o2.y, o2.x+o2.c,o2.y+o2.h,7)
+ --o2
+ print("o2",o2.x-8,o2.y-1,7)
+ rectfill(o2.x, o2.y, o2.x+o2.w,o2.y+o2.h,1)
+ rectfill(o2.x, o2.y, o2.x+o2.c,o2.y+o2.h,7)
+ enemy_draw()
 
-  --plyr
+ --plyr
  spr(p.s,p.x,p.y,1,1,p.flipped)
  anim(p)
+
  trsr()
+ player_enemy_col()
  win()
  death()
- print(box_collide(p,subm))
+end
+
+function player_enemy_col()
+ for enemy in all(enemies) do
+  if(box_collide(p,enemy)) then
+   p.x+=(p.x-enemy.x)*0.75
+   p.y+=(p.y-enemy.y)*0.75
+   o2.c-=enemy.dmg
+  end
+ end
+end
+
+function enemy_draw()
+ for enemy in all(enemies) do
+  spr(enemy.s,enemy.x,enemy.y,1,1)
+ end
 end
 
 function move(o)
@@ -175,7 +198,7 @@ function anim(actor)
 end
 
 function drop_o2()
- if o2.c > 1 and o2.c < 100 then
+ if o2.c>1 and o2.c<100 then
   o2.c-=0.1
  else
   o2.c=0
@@ -183,7 +206,7 @@ function drop_o2()
 end
 
 function death()
- if o2.c == 0 then
+ if o2.c==0 then
   rectfill(0,0,128,128,0)
   print("i'm so sorry, you're dead.", 14, 60, 7)
  end
