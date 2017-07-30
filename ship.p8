@@ -7,12 +7,29 @@ enemies={
  {type="jelly",x=16,y=16,w=8,h=8,s=049,dmg=5},
  {type="jelly",x=48,y=48,w=8,h=8,s=049,dmg=5}
 }
+fish_enemies={}
+for i=0,2 do
+	add(fish_enemies,{
+		type="fish",
+		x=rnd(128),
+		y=rnd(128),
+		w=8,
+		h=8,
+		s=52,
+		dmg=5,
+		s=0+flr(rnd(3)/2),
+		spd=0.25+rnd(3),
+		off=rnd(1),
+		c=6+flr(0.5+rnd(1))
+	})
+end
+
 tile={}
 tile.x=0
 tile.y=0
 
 particles = {}
-for i=0,8 do
+for i=0,6 do
 	add(particles,{
 		x=rnd(128),
 		y=rnd(128),
@@ -82,7 +99,7 @@ function _draw()
 
 	move(p)
  trsr()
- bubbles()
+ p_move(particles,55,3,5)
  player_enemy_col()
  win()
  death()
@@ -96,12 +113,20 @@ function player_enemy_col()
    o2.c-=enemy.dmg
   end
  end
+ for enemy in all(fish_enemies) do
+  if(box_collide(p,enemy)) then
+   p.x+=(p.x-enemy.x)*0.75
+   p.y+=(p.y-enemy.y)*0.75
+   o2.c-=enemy.dmg
+  end
+ end
 end
 
 function enemy_draw()
  for enemy in all(enemies) do
   anim(enemy,enemy.s,3,5)
  end
+ p_move(fish_enemies,52,2,5)
 end
 
 function move(o)
@@ -238,9 +263,11 @@ end
 
 function death()
  if o2.c==0 then
-  p.pause=true
-  rectfill(0,0,128,128,0)
-  print("i'm so sorry, you're dead.", 14, 60, 7)
+ 	if not p.pause then
+	  p.pause=true
+	 end
+	 rectfill(0,0,128,128,0)
+	 print("i'm so sorry, you're dead.", 14, 60, 7)
  end
 end
 
@@ -279,13 +306,13 @@ function grounded(o)
 end
 
 
-function bubbles()
+function p_move(parts,sf,fn,sp)
 	-- particles
-	foreach(particles, function(p)
+	foreach(parts, function(p)
 		p.x += p.spd
 		p.y += sin(p.off)
 		p.off+= min(0.05,p.spd/32)
-		anim(p,55,3,5)
+		anim(p,sf,fn,sp)
 		--rectfill(p.x,p.y,p.x+p.s,p.y+p.s,p.c)
 		if p.x>128+4 then 
 			p.x=-4
