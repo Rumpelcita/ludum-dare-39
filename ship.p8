@@ -79,31 +79,45 @@ end
 function _update()
  drop_o2()
  --collision player enemies
+ move(p)
+ player_enemy_col()	
 end
 
 function _draw()
- --map
- rectfill(0,0,128,128,12)
- map(0,0)
+ if not p.pause then
+	 --map
+	 rectfill(0,0,128,128,12)
+	 map(0,0)
+	
+	 --o2
+	 print("o2",o2.x-8,o2.y-1,7)
+	 rectfill(o2.x, o2.y, o2.x+o2.w,o2.y+o2.h,1)
+	 rectfill(o2.x, o2.y, o2.x+o2.c,o2.y+o2.h,7)
+	 enemy_draw()
+	
+	 --score
+	 
+	 print("†", 2, 4, 10)
+	 print(score, 12, 4, 7)
+	
+		--player
+		player_anim(p)
+		
+	 trsr()
+	 p_move(particles,55,3,5)
+	end
 
- --o2
- print("o2",o2.x-8,o2.y-1,7)
- rectfill(o2.x, o2.y, o2.x+o2.w,o2.y+o2.h,1)
- rectfill(o2.x, o2.y, o2.x+o2.c,o2.y+o2.h,7)
- enemy_draw()
-
- --score
- 
- print("†", 2, 4, 10)
- print(score, 12, 4, 7)
-
-	move(p)
- trsr()
- p_move(particles,55,3,5)
- player_enemy_col()
  win()
  death()
 end
+
+function player_anim(p)
+	if p.move then
+  anim(p,3,5,10,p.flipped)
+ else
+	 spr(p.s,p.x,p.y,1,1,p.flipped)
+	end
+end	
 
 function player_enemy_col()
  for enemy in all(enemies) do
@@ -137,18 +151,16 @@ function move(o)
   if (btn(0)) then
   	ddx=-.25 
   	o.flipped=true
-  	anim(p,3,5,10,o.flipped)
+  	o.move=true
   elseif (btn(1)) then
   	ddx=.25
   	o.flipped=false
-  	anim(p,3,5,10)
+  	o.move=true
   elseif (btnp(2)) then
   	o.dy=-2 
   	o.move=true
-  	anim(p,3,5,10)
   else
-   --plyr
- 		spr(p.s,p.x,p.y,1,1,p.flipped)
+   o.move=false
  	end
 
 
