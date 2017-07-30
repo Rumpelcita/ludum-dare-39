@@ -64,121 +64,126 @@ function _draw()
  trsr()
  win()
  death()
+ print(box_collide(p,subm))
 end
 
 function move(o)
-	if not p.pause then
-		local lx=o.x -- last x
-	 local ly=o.y -- last y
-	 p.move=false
-	
-		if btn(0) then
-	  o.x-=o.speed
-	  o.flipped=true
-	  p.move=true
-	 end
-	 if btn(1) then
-	  o.x+=o.speed
-	  o.flipped=false
-	  p.move=true
-	 end
-	 if btn(3) then
-	  o.y+=o.speed
-	  p.move=true
-	 end
-	 if btn(2) then
-	  o.y-=o.speed
-	  p.move=true
-	 end
-	
-	 if(cworld(o)) o.x=lx o.y=ly
-	 if(ctile(o,0)) o.x=lx o.y=ly
-	end
+ if not p.pause then
+  local lx=o.x -- last x
+  local ly=o.y -- last y
+  o.move=false
+
+  if btn(0) then
+   o.x-=o.speed
+   o.flipped=true
+   o.move=true
+  end
+  if btn(1) then
+   o.x+=o.speed
+   o.flipped=false
+   o.move=true
+  end
+  if btn(3) then
+   o.y+=o.speed
+   o.move=true
+  end
+  if btn(2) then
+   o.y-=o.speed
+   o.move=true
+  end
+
+  if(cworld(o)) o.x=lx o.y=ly
+  if(ctile(o,0)) o.x=lx o.y=ly
+ end
 end
 
 function ctile(o,f)
  local ct=false
 
 	-- takes object and flag, returns collision
-	if(o.cm) then
-	 local x1=o.x/8
-	 local y1=o.y/8
-	 local x2=(o.x+7)/8
-	 local y2=(o.y+7)/8
-	 local a=fget(mget(x1,y1),f)
-	 local b=fget(mget(x1,y2),f)
-	 local c=fget(mget(x2,y2),f)
-	 local d=fget(mget(x2,y1),f)
-	 ct=a or b or c or d
-	 if (c or d) tile.x=x2
-	 if (a or b) tile.x=x1
-	 if (a or d) tile.y=y1
-	 if (b or c) tile.y=y2 
-	 
-	end
+ if(o.cm) then
+  local x1=o.x/8
+  local y1=o.y/8
+  local x2=(o.x+7)/8
+  local y2=(o.y+7)/8
+  local a=fget(mget(x1,y1),f)
+  local b=fget(mget(x1,y2),f)
+  local c=fget(mget(x2,y2),f)
+  local d=fget(mget(x2,y1),f)
+  ct=a or b or c or d
+  if (c or d) tile.x=x2
+  if (a or b) tile.x=x1
+  if (a or d) tile.y=y1
+  if (b or c) tile.y=y2
+ end
 
-	return ct
-
+ return ct
 end
 
 function cworld(o)
  local cb=false
 	-- if colliding world bounds
-	if(o.cw) then
-	 cb=(o.x<0 or o.x+8>128 or
-	  o.y<0 or o.y+8>128)
-	end
+ if(o.cw) then
+  cb=(o.x<0 or o.x+8>128 or
+   o.y<0 or o.y+8>128)
+ end
 
-	return cb
+ return cb
 end
 
 function anim(actor)
-	if p.move then
-		if actor.pos > actor.e then
- 	 actor.pos+=1
- 	end
+ if p.move then
+  if actor.pos > actor.e then
+   actor.pos+=1
+  end
  else
- 	actor.pos=actor.s
+  actor.pos=actor.s
  end
 end
 
 function drop_o2()
-	if o2.c > 1 and o2.c < 100 then
-		o2.c-=0.1
-	else
-		o2.c=0
-	end
+ if o2.c > 1 and o2.c < 100 then
+  o2.c-=0.1
+ else
+  o2.c=0
+ end
 end
 
 function death()
-	if o2.c == 0 then
-		p.pause=true
-		rectfill(0,0,128,128,0)
-		print("i'm so sorry, you're dead.", 14, 60, 7)
-	end
+ if o2.c == 0 then
+  rectfill(0,0,128,128,0)
+  print("i'm so sorry, you're dead.", 14, 60, 7)
+ end
 end
 
 function win()
-	if ctile(p,1) then
-		p.pause=true
-		rectfill(0,0,128,128,0)
-		print("you made it out alive!", 14, 60, 7)
-		print("treasure:", 14, 68, 7)
-		print(score, 52, 68, 7)
-	end
+ if ctile(p,1) then
+  rectfill(0,0,128,128,0)
+  print("you made it out alive!", 14, 60, 7)
+  print("treasure:", 14, 68, 7)
+  print(score, 52, 68, 7)
+ end
 end
 
 function trsr()
-	if ctile(p,2) then
-		print("Ž open", 52,106 , 7)
-		if btnp(4) then
-		 score += 1
-		 mset(tile.x,tile.y,2)	
-		end
+ if ctile(p,2) then
+  print("ï¿½ open",52,106,7)
+  if btnp(4) then
+   score+=1
+   mset(tile.x,tile.y,2)
+  end
 	else
 		print("", 52, 106, 7)
 	end
 end
+
+function box_collide(actor1, actor2)
+	return (actor1.x<actor2.x+actor2.w
+   and actor1.x+actor1.w>actor2.x
+   and actor1.y<actor2.y+actor2.h
+   and actor1.y+actor1.h>actor2.y)
+end
+
 __gfx__
 00000000000000000000000000111100001111000011110000111100001111000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000001eeeee001eeeee001eeeee001eeeee001eeeee00000000000000000000000000000000000000000000000000000000000000000
@@ -308,7 +313,6 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
 __gff__
 0004000000000000000000000000000002020000000000000000000000000000020200000000000000000000000000000108080810100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -475,4 +479,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
