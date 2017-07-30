@@ -18,8 +18,10 @@ o2.h=2
 
 --player
 p={}
-p.x=64
+p.x=24
 p.y=64
+p.dx=0
+p.dy=0
 p.w=8
 p.h=8
 p.s=3
@@ -45,20 +47,20 @@ end
 
 function _update()
  drop_o2()
-	move(p)
+  move(p)
 end
 
 function _draw()
-	--map
-	rectfill(0,0,128,128,12)
-	map(0,0)
+  --map
+  rectfill(0,0,128,128,12)
+  map(0,0)
 
-	--o2
-	print("o2",o2.x-8,o2.y-1,7)
-	rectfill(o2.x, o2.y, o2.x+o2.w,o2.y+o2.h,1)
-	rectfill(o2.x, o2.y, o2.x+o2.c,o2.y+o2.h,7)
+  --o2
+  print("o2",o2.x-8,o2.y-1,7)
+  rectfill(o2.x, o2.y, o2.x+o2.w,o2.y+o2.h,1)
+  rectfill(o2.x, o2.y, o2.x+o2.c,o2.y+o2.h,7)
 
-	--plyr
+  --plyr
  spr(p.s,p.x,p.y,1,1,p.flipped)
  anim(p)
  trsr()
@@ -72,35 +74,66 @@ function move(o)
   local lx=o.x -- last x
   local ly=o.y -- last y
   o.move=false
+  local ddx = 0
+  if (btn(0)) ddx=-.25 o.flipped=true
+  if (btn(1)) ddx=.25 o.flipped=false
+  if (btnp(2)) o.dy=-2
 
-  if btn(0) then
-   o.x-=o.speed
-   o.flipped=true
-   o.move=true
+  -- apply x accel
+  o.dx += ddx
+
+  -- limit max speed
+  if o.dx > 2 then
+      o.dx = 2
+  elseif o.dx < -2 then
+      o.dx = -2
   end
-  if btn(1) then
-   o.x+=o.speed
-   o.flipped=false
-   o.move=true
+
+  -- drag
+  if ddx == 0 then
+      o.dx *= 0.2
   end
-  if btn(3) then
-   o.y+=o.speed
-   o.move=true
+
+  -- y velocity
+  if grounded(o) then
+    -- fix position or else he'll be sunk into floor
+    o.y = flr(flr(o.y)/8)*8
+  else
+    -- gravity accel
+    o.dy += 0.15
   end
-  if btn(2) then
-   o.y-=o.speed
-   o.move=true
-  end
+
+  -- update position based on vel
+  o.x += o.dx
+  o.y += o.dy
+  -- if btn(0) then
+  --  o.dx-=1
+  --  o.flipped=true
+  --  o.move=true
+  -- end
+  -- if btn(1) then
+  --  o.dx+=1
+  --  o.flipped=false
+  --  o.move=true
+  -- end
+  -- if btn(3) then
+  --  o.dy+=1
+  --  o.move=true
+  -- end
+  -- if btn(2) then
+  --  o.dy-=1
+  --  o.move=true
+  -- end
 
   if(cworld(o)) o.x=lx o.y=ly
-  if(ctile(o,0)) o.x=lx o.y=ly
+  --if(ctile(o,0)) o.x=lx o.y=ly
  end
 end
 
 function ctile(o,f)
  local ct=false
 
-	-- takes object and flag, returns collision
+  -- takes object and flag, returns collision
  if(o.cm) then
   local x1=o.x/8
   local y1=o.y/8
@@ -122,7 +155,7 @@ end
 
 function cworld(o)
  local cb=false
-	-- if colliding world bounds
+  -- if colliding world bounds
  if(o.cw) then
   cb=(o.x<0 or o.x+8>128 or
    o.y<0 or o.y+8>128)
@@ -172,16 +205,21 @@ function trsr()
    score+=1
    mset(tile.x,tile.y,2)
   end
-	else
-		print("", 52, 106, 7)
-	end
+  else
+  print("", 52, 106, 7)
+  end
 end
 
 function box_collide(actor1, actor2)
-	return (actor1.x<actor2.x+actor2.w
+  return (actor1.x<actor2.x+actor2.w
    and actor1.x+actor1.w>actor2.x
    and actor1.y<actor2.y+actor2.h
    and actor1.y+actor1.h>actor2.y)
+end
+
+function grounded(o)
+    o.v = mget(flr(o.x+4)/8, flr(o.y)/8+1)
+    return fget(o.v, 0)
 end
 
 __gfx__
