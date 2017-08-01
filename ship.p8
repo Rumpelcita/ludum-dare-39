@@ -3,6 +3,7 @@ version 8
 __lua__
 --globals
 score=0
+start_s=true
 endsong=false
 enemies={
  {type="jelly",x=16,y=16,w=8,h=8,s=049,dmg=5},
@@ -60,17 +61,19 @@ p.w=8
 p.h=8
 p.s=3
 p.n=7
+p.speed = 1
 p.flipped=false
 p.cm=true
 p.cw=true
 p.move=false
 p.pause=false
 p.grounded=false
+p.win=false
 
 --sub
 subm={}
 subm.x=64
-subm.y=0
+subm.y=28
 subm.w=16
 subm.h=9
 
@@ -87,39 +90,60 @@ function _init()
 end
 
 function _update()
- drop_o2()
- --collision player enemies
- move_player()
- player_enemy_col(enemies)
- player_enemy_col(fish_enemies)
+ if not start_s then
+   drop_o2()
+   --collision player enemies
+   move_player()
+   player_enemy_col(enemies)
+   player_enemy_col(fish_enemies)
+ else
+   if btnp(5) then
+     start_s=false
+     sfx(1)
+   end
+ end
 end
 
 function _draw()
- if not p.pause then
-  --map
-  rectfill(0,0,128,128,12)
-  map(0,0)
+ if not start_s then
+   if not p.pause then
+    --map
+    rectfill(0,0,128,128,12)
+    map(0,0)
 
-  --o2
-  print("o2",o2.x-8,o2.y-1,7)
-  rectfill(o2.x,o2.y,o2.x+o2.w,o2.y+o2.h,1)
-  rectfill(o2.x,o2.y,o2.x+o2.c,o2.y+o2.h,7)
-  enemy_draw()
+    --o2
+    print("o2",o2.x-8,o2.y-1,7)
+    rectfill(o2.x,o2.y,o2.x+o2.w,o2.y+o2.h,1)
+    rectfill(o2.x,o2.y,o2.x+o2.c,o2.y+o2.h,7)
+    enemy_draw()
 
-  --score
+    --score
 
-  print("ï¿½",2,4,10)
-  print(score,12,4,7)
+    print("†",2,4,10)
+    print(score,12,4,7)
 
-  --player
-  player_anim(p)
+    --player
+    player_anim(p)
 
-  trsr()
-  p_move(particles,55,3,5)
+    trsr()
+    p_move(particles,55,3,5)
+   end
+
+   win()
+   death()
+ else
+   rectfill(0,0,128,128,12)
+   spr(016,subm.x-subm.w/2,subm.y,2,2)
+   print("subreach", 48, 40, 7)
+   print("loot some treasure.", 12, 60, 7)
+   print("reach the sub", 12, 68, 7)
+   print("before your o2 runs out.", 12, 74, 7)
+   print("avoid fishes. seriously.", 12, 82, 7)
+   print("by devonorxi and rumpelcita.", 10, 98, 7)
+   print("‹”ƒ‘ to move. — to start.", 7, 115, 7)
+
+
  end
-
- win()
- death()
 end
 
 function player_anim(p)
@@ -196,56 +220,79 @@ function move_player()
  if not p.pause then
   local lx=p.x -- last x
   local ly=p.y -- last y
-  local ddx = 0
-  if (btn(0)) then
- 	 ddx=-.25
- 	 p.flipped=true
- 	 p.move=true
-  elseif (btn(1)) then
- 	 ddx=.25
- 	 p.flipped=false
- 	 p.move=true
-  elseif (btnp(2)) then
- 	 p.dy=-2
- 	 p.move=true
-   sfx(1)
-  else
-   p.move=false
- end
 
- -- apply x accel
- p.dx+=ddx
+  if btn(0) then
+   p.x-=p.speed
+   p.flipped=true
+   p.move=true
+  elseif btn(1) then
+   p.x+=p.speed
+   p.flipped=false
+   p.move=true
+  elseif btn(3) then
+   p.y+=p.speed
+   p.move=true
+  elseif btn(2) then
+   p.y-=p.speed
+   p.move=true
+  end
 
- -- limit max speed
- if p.dx>2 then
-  p.dx=2
- elseif p.dx<-2 then
-  p.dx=-2
- end
-
- -- drag
- if ddx == 0 then
-  p.dx*=0.2
- end
-
- -- y velocity
- if check_grounded(p) then
-  -- fix position or else he'll be sunk into floor
-  p.grounded=true
-  --p.y-=p.y%8 --flr(flr(p.y)/8)*8
- else
-  -- gravity accel
-  p.dy+=0.15
- end
-
- -- update position based on vel
- p.x+=p.dx
- p.y+=p.dy
-
- if(cworld(p)) p.x=lx p.y=ly
- --player_terrain_col() --ctile(p,0)
+  if(cworld(p)) p.x=lx p.y=ly
+  if(ctile(p,0)) p.x=lx p.y=ly
  end
 end
+
+-- move_player_old
+ --  local ddx = 0
+ --  if (btn(0)) then
+ -- 	 ddx=-.25
+ -- 	 p.flipped=true
+ -- 	 p.move=true
+ --  elseif (btn(1)) then
+ -- 	 ddx=.25
+ -- 	 p.flipped=false
+ -- 	 p.move=true
+ --  elseif (btnp(2)) then
+ -- 	 p.dy=-2
+ -- 	 p.move=true
+ --   sfx(1)
+ --  else
+ --   p.move=false
+ -- end
+ --
+ -- -- apply x accel
+ -- p.dx+=ddx
+ --
+ -- -- limit max speed
+ -- if p.dx>2 then
+ --  p.dx=2
+ -- elseif p.dx<-2 then
+ --  p.dx=-2
+ -- end
+ --
+ -- -- drag
+ -- if ddx == 0 then
+ --  p.dx*=0.2
+ -- end
+ --
+ -- -- y velocity
+ -- if check_grounded(p) then
+ --  -- fix position or else he'll be sunk into floor
+ --  p.grounded=true
+ --  --p.y-=p.y%8 --flr(flr(p.y)/8)*8
+ -- else
+ --  -- gravity accel
+ --  p.dy+=0.15
+ -- end
+ --
+ -- -- update position based on vel
+ -- p.x+=p.dx
+ -- p.y+=p.dy
+ --
+ -- if(cworld(p)) p.x=lx p.y=ly
+ -- 	player_terrain_col() --ctile(p,0)
+ -- end
+--end
 
 function ctile(o,f)
  local ct=true
@@ -306,16 +353,18 @@ function drop_o2()
 end
 
 function death()
- if o2.c==0 then
-  if not endsong then
-   music(12)
-   endsong=true
-  end
- 	if not p.pause then
-	  p.pause=true
- 	end
-	rectfill(0,0,128,128,0)
-	print("i'm so sorry, you're dead.", 14, 60, 7)
+ if not p.win then
+   if o2.c==0 then
+    if not endsong then
+     music(12)
+     endsong=true
+    end
+   	if not p.pause then
+  	  p.pause=true
+   	end
+  	rectfill(0,0,128,128,0)
+  	print("i'm so sorry, you're dead.", 14, 60, 7)
+   end
  end
 end
 
@@ -326,6 +375,7 @@ function win()
    endsong=true
   end
  	p.pause=true
+  p.win=true
   rectfill(0,0,128,128,0)
   print("you made it out alive!", 14, 60, 7)
   print("treasure:", 14, 68, 7)
@@ -335,7 +385,7 @@ end
 
 function trsr()
  if ctile(p,2) then
-  print("ï¿½ open",52,106,7)
+  print("Ž open",52,106,7)
   if btnp(4) then
    score+=1
    sfx(0)
@@ -503,6 +553,7 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
 __gff__
 0004000000000000000000000000000002020000000000000000000000000000020200000000000000000000000000000108080810100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -669,3 +720,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
