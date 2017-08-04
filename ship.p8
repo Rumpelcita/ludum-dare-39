@@ -56,6 +56,8 @@ p.x=24
 p.y=64
 p.dx=0
 p.dy=0
+p.vx=0
+p.vy=0
 p.w=8
 p.h=8
 p.s=3
@@ -88,10 +90,21 @@ end
 
 function _update()
  drop_o2()
- --collision player enemies
- move_player()
+ calc_player_mov()
  player_enemy_col(enemies)
  player_enemy_col(fish_enemies)
+ player_terrain_col()
+ apply_player_mov()
+end
+
+function apply_player_mov()
+  p.vy+=0.15
+  p.x+=p.dx
+  p.y+=p.dy
+  if (p.x<0) p.x=0
+  if (p.y<0) p.y=0
+  if (p.x>(128-p.w)) p.x=128-p.w
+  if (p.y>(128-p.h)) p.h=128-p.h
 end
 
 function _draw()
@@ -133,8 +146,8 @@ end
 function player_enemy_col(group)
  for enemy in all(group) do
   if(box_collide(p,enemy)) then
-   p.x+=(p.x-enemy.x)*0.75
-   p.y+=(p.y-enemy.y)*0.75
+   p.dx+=(p.x-enemy.x)*0.75
+   p.dy+=(p.y-enemy.y)*0.75
    o2.c-=enemy.dmg
    sfx(2)
   end
@@ -142,47 +155,78 @@ function player_enemy_col(group)
 end
 
 function player_terrain_col()
- local tx0=flr(p.x/8)
- local ty0=flr(p.y/8)
- local tx1=flr((p.x+p.w-1)/8)
- local ty1=flr((p.y+p.h-1)/8)
- local dx=0
- local dy=0
+ local nx=p.x+p.dx
+ local ny=p.y+p.dy
+ local tx0=flr(nx/8)
+ local ty0=flr(ny/8)
+ local tx1=flr((nx+p.w-1)/8)
+ local ty1=flr((ny+p.h-1)/8)
  col.u=false
  col.d=false
  col.l=false
  col.r=false
 
- --check left
- if(fget(mget(tx0,ty0),0)
-  or fget(mget(tx0,ty1),0)) then
-   col.l=true
-   dx+=8-p.x%8
- end
-
- --check right
- if(fget(mget(tx1,ty0),0)
-  or fget(mget(tx1,ty1),0)) then
-   col.r=true
-   dx-=p.x%8
- end
-
  --check up
- if(fget(mget(tx0,ty0),0)
-  or fget(mget(tx1,ty0),0)) then
-   col.u=true
-   dy+=8-p.y%8
- end
+ if(p.dy<0) then
+  if(fget(mget(tx0,ty0),0)
+   or fget(mget(tx1,ty0),0)) then
+    col.u=true
+    p.y=(ty0+1)*8
+    p.dy=0
+    p.vy=0
+  end
+end
 
  --check down
- if(fget(mget(tx0,ty1),0)
-  or fget(mget(tx1,ty1),0)) then
-   col.d=true
-   dy-=p.y%8
+ nx=p.x+p.dx
+ ny=p.y+p.dy
+ tx0=flr(nx/8)
+ ty0=flr(ny/8)
+ tx1=flr((nx+p.w-1)/8)
+ ty1=flr((ny+p.h-1)/8)
+ if(p.dy>0) then
+  if(fget(mget(tx0,ty1),0)
+   or fget(mget(tx1,ty1),0)) then
+    col.d=true
+    p.y=ty0*8
+    p.dy=0
+    p.vy=0
+  end
  end
 
- p.x+=dx
- p.y+=dy
+ --check left
+ nx=p.x+p.dx
+ ny=p.y+p.dy
+ tx0=flr(nx/8)
+ ty0=flr(ny/8)
+ tx1=flr((nx+p.w-1)/8)
+ ty1=flr((ny+p.h-1)/8)
+ if(p.dx<0) then
+  if(fget(mget(tx0,ty0),0)
+   or fget(mget(tx0,ty1),0)) then
+     col.l=true
+     p.x=(tx0+1)*8
+     p.dx=0
+     p.vx=0
+  end
+ end
+
+--check right
+ nx=p.x+p.dx
+ ny=p.y+p.dy
+ tx0=flr(nx/8)
+ ty0=flr(ny/8)
+ tx1=flr((nx+p.w-1)/8)
+ ty1=flr((ny+p.h-1)/8)
+ if(p.dx>0) then
+  if(fget(mget(tx1,ty0),0)
+   or fget(mget(tx1,ty1),0)) then
+    col.r=true
+    p.x=tx0*8
+    p.dx=0
+    p.vx=0
+  end
+ end
 end
 
 function enemy_draw()
@@ -192,10 +236,13 @@ function enemy_draw()
   p_move(fish_enemies,52,2,5)
 end
 
-function move_player()
+function calc_player_mov()
+ p.dx=0
+ p.dy=0
  if not p.pause then
-  local lx=p.x -- last x
-  local ly=p.y -- last y
+  --local lx=p.x -- last x
+  --local ly=p.y -- last y
+  p.move = false
   local ddx = 0
   if (btn(0)) then
  	 ddx=-.25
@@ -205,45 +252,31 @@ function move_player()
  	 ddx=.25
  	 p.flipped=false
  	 p.move=true
-  elseif (btnp(2)) then
- 	 p.dy=-2
+  end
+
+  if (btnp(2)) then
+ 	 p.vy=-2
  	 p.move=true
    sfx(1)
-  else
-   p.move=false
- end
+  end
 
- -- apply x accel
- p.dx+=ddx
+  -- apply x accel
+  p.vx+=ddx
 
- -- limit max speed
- if p.dx>2 then
-  p.dx=2
- elseif p.dx<-2 then
-  p.dx=-2
- end
+  -- limit max speed
+  if p.vx>2 then
+   p.vx=2
+  elseif p.vx<-2 then
+   p.vx=-2
+  end
 
- -- drag
- if ddx == 0 then
-  p.dx*=0.2
- end
+  -- drag
+  if ddx == 0 then
+   p.vx*=0.2
+  end
 
- -- y velocity
- if check_grounded(p) then
-  -- fix position or else he'll be sunk into floor
-  p.grounded=true
-  --p.y-=p.y%8 --flr(flr(p.y)/8)*8
- else
-  -- gravity accel
-  p.dy+=0.15
- end
-
- -- update position based on vel
- p.x+=p.dx
- p.y+=p.dy
-
- if(cworld(p)) p.x=lx p.y=ly
- --player_terrain_col() --ctile(p,0)
+  p.dx=p.vx
+  p.dy=p.vy
  end
 end
 
@@ -268,17 +301,6 @@ function ctile(o,f)
  end
 
  return ct
-end
-
-function cworld(o)
- local cb=false
- -- if colliding world bounds
- if(o.cw) then
-  cb=(o.x<0 or o.x+8>128 or
-  o.y<0 or o.y+8>128)
- end
-
- return cb
 end
 
 -- object, starting frame, number of frames, animation speed, flip
