@@ -3,6 +3,8 @@ version 8
 __lua__
 --globals
 score=0
+title=true
+over=false
 endsong=false
 enemies={
  {type="jelly",x=16,y=16,w=8,h=8,s=049,dmg=5},
@@ -338,17 +340,19 @@ function drop_o2()
 end
 
 function death()
- if o2.c==0 then
-  if not endsong then
-   music(12)
-   endsong=true
-  end
- 	if not p.pause then
-	  p.pause=true
- 	end
-	rectfill(0,0,128,128,0)
-	print("i'm so sorry, you're dead.", 14, 60, 7)
- end
+	if not over then
+	 if o2.c==0 then
+	  if not endsong then
+	   music(12)
+	   endsong=true
+	  end
+	 	if not p.pause then
+		  p.pause=true
+	 	end
+			rectfill(0,0,128,128,0)
+			print("i'm so sorry, you're dead.", 14, 60, 7)
+	 end
+	end
 end
 
 function win()
@@ -358,6 +362,7 @@ function win()
    endsong=true
   end
  	p.pause=true
+ 	over=true
   rectfill(0,0,128,128,0)
   print("you made it out alive!", 14, 60, 7)
   print("treasure:", 14, 68, 7)
