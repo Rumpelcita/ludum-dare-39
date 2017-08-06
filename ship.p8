@@ -74,7 +74,7 @@ p.grounded=false
 --sub
 subm={}
 subm.x=64
-subm.y=0
+subm.y=60
 subm.w=16
 subm.h=9
 
@@ -98,12 +98,19 @@ function _init()
 end
 
 function _update()
- drop_o2()
- calc_player_mov()
- player_enemy_col(enemies)
- player_enemy_col(fish_enemies)
- player_terrain_col()
- apply_player_mov()
+	if not title then
+	 drop_o2()
+	 calc_player_mov()
+	 player_enemy_col(enemies)
+	 player_enemy_col(fish_enemies)
+	 player_terrain_col()
+	 apply_player_mov()
+	else
+		if btnp(5) then
+   title=false
+   sfx(1)
+  end
+ end 
 end
 
 function apply_player_mov()
@@ -117,34 +124,44 @@ function apply_player_mov()
 end
 
 function _draw()
- if not p.pause then
-  --map
-  rectfill(0,0,128,128,12)
-  map(0,0)
-
-  --o2
-  print("o2",o2.x-8,o2.y-1,7)
-  rectfill(o2.x,o2.y,o2.x+o2.w,o2.y+o2.h,1)
-  rectfill(o2.x,o2.y,o2.x+o2.c,o2.y+o2.h,7)
-  if (o2.c < 30) then
-  	anim(a,8,2,5)
-  end
-  enemy_draw()
-
-  --score
-
-  print("†",2,4,10)
-  print(score,12,4,7)
-
-  --player
-  player_anim(p)
-
-  trsr()
-  p_move(particles,55,3,5)
- end
-
- win()
- death()
+	if not title then
+	 if not p.pause then
+	  --map
+	  rectfill(0,0,128,128,12)
+	  map(0,0)
+	
+	  --o2
+	  print("o2",o2.x-8,o2.y-1,7)
+	  rectfill(o2.x,o2.y,o2.x+o2.w,o2.y+o2.h,1)
+	  rectfill(o2.x,o2.y,o2.x+o2.c,o2.y+o2.h,7)
+	  if (o2.c < 30) then
+	  	anim(a,8,2,5)
+	  end
+	  enemy_draw()
+	
+	  --score
+	
+	  print("†",2,4,10)
+	  print(score,12,4,7)
+	
+	  --player
+	  player_anim(p)
+	
+	  trsr()
+	  p_move(particles,55,3,5)
+	 end
+	
+	 win()
+	 death()
+	else
+		rectfill(0,0,128,128,0)
+		rectfill(0,68,128,128,12)
+  spr(016,subm.x-subm.w/2,subm.y,2,2)
+		print("subreach", 48, 40, 7)
+		print("by devonorxi and rumpelcita", 10, 88, 7)
+		print("‹”ƒ‘ to move", 32,102, 7)
+		print("— to start", 42, 112, 7)
+	end
 end
 
 function player_anim(p)
