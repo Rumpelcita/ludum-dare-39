@@ -159,7 +159,7 @@ function _draw()
   spr(016,subm.x-subm.w/2,subm.y,2,2)
 		print("subreach", 48, 40, 7)
 		print("by devonorxi and rumpelcita", 10, 88, 7)
-		print("‹”ƒ‘ to move", 32,102, 7)
+		print("‹”‘ to move", 36,102, 7)
 		print("— to start", 42, 112, 7)
 	end
 end
