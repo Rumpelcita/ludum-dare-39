@@ -2,16 +2,15 @@ pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
 --globals
-score=0
-title=true
-over=false
-endsong=false
+state="title"
+
 enemies={
  {type="jelly",x=16,y=16,w=8,h=8,s=049,dmg=5},
  {type="jelly",x=48,y=48,w=8,h=8,s=049,dmg=5}
 }
+
 fish_enemies={}
-for i=0,3 do
+for i=0,2 do
  add(fish_enemies,{
   type="fish",
   x=rnd(128),
@@ -25,92 +24,94 @@ for i=0,3 do
   off=rnd(1),
   c=6+flr(0.5+rnd(1))
  })
-end
+ end
+
+ particles = {}
+ for i=0,6 do
+  add(particles,{
+   x=rnd(128),
+   y=rnd(128),
+   s=0+flr(rnd(3)/2),
+   spd=0.25+rnd(3),
+   off=rnd(1),
+   c=6+flr(0.5+rnd(1))
+  })
+ end
 
 tile={}
-tile.x=0
-tile.y=0
-
-particles = {}
-for i=0,6 do
- add(particles,{
-  x=rnd(128),
-  y=rnd(128),
-  s=0+flr(rnd(3)/2),
-  spd=0.25+rnd(3),
-  off=rnd(1),
-  c=6+flr(0.5+rnd(1))
- })
-end
-
---o2
-o2={}
-o2.m=100
-o2.c=99
-o2.x=12
-o2.y=123
-o2.w=100
-o2.h=2
 
 --player
 p={}
-p.x=24
-p.y=64
-p.dx=0
-p.dy=0
-p.vx=0
-p.vy=0
-p.w=8
-p.h=8
-p.s=3
-p.n=7
-p.flipped=false
-p.cm=true
-p.cw=true
-p.move=false
-p.pause=false
-p.grounded=false
+
+--o2
+o2={}
 
 --sub
 subm={}
-subm.x=64
-subm.y=60
-subm.w=16
-subm.h=9
-
---arrow
-a={}
-a.x=92
-a.y=14
-a.w=8
-a.h=8
-
--- esto es para debuggear nomas
-col={
- u=false,
- d=false,
- l=false,
- r=false
-}
 
 function _init()
+ score=0
+
+ tile.x=0
+ tile.y=0
+
+ o2.m=100
+ o2.c=99
+ o2.x=12
+ o2.y=123
+ o2.w=100
+ o2.h=2
+
+ p.x=24
+ p.y=64
+ p.dx=0
+ p.dy=0
+ p.vx=0
+ p.vy=0
+ p.w=8
+ p.h=8
+ p.s=3
+ p.n=7
+ p.flipped=false
+ p.cm=true
+ p.cw=true
+ p.move=false
+ p.grounded=false
+
+ subm.x=64
+ subm.y=0
+ subm.w=16
+ subm.h=9
+
  music(0)
 end
 
+function initialize()
+
+end
+
 function _update()
-	if not title then
-	 drop_o2()
-	 calc_player_mov()
-	 player_enemy_col(enemies)
-	 player_enemy_col(fish_enemies)
-	 player_terrain_col()
-	 apply_player_mov()
-	else
-		if btnp(5) then
-   title=false
+ if state=="game" then
+  drop_o2()
+  calc_player_mov()
+  player_enemy_col(enemies)
+  player_enemy_col(fish_enemies)
+  player_terrain_col()
+  apply_player_mov()
+  check_win()
+  check_death()
+ elseif state=="death" or state=="win" then
+   if btnp(4) then
+    state="title"
+    _init()
+    sfx(1)
+   end
+ elseif state=="title" then
+  if btnp(4) then
+   state="game"
    sfx(1)
   end
- end 
+ end
 end
 
 function apply_player_mov()
@@ -123,45 +124,48 @@ function apply_player_mov()
   if (p.y>(128-p.h)) p.h=128-p.h
 end
 
+function check_win()
+ if ctile(p,1) then
+  state="win"
+  music(13)
+ end
+end
+
+function check_death()
+ if o2.c==0 then
+  state="death"
+  music(12)
+ end
+end
+
 function _draw()
-	if not title then
-	 if not p.pause then
-	  --map
-	  rectfill(0,0,128,128,12)
-	  map(0,0)
-	
-	  --o2
-	  print("o2",o2.x-8,o2.y-1,7)
-	  rectfill(o2.x,o2.y,o2.x+o2.w,o2.y+o2.h,1)
-	  rectfill(o2.x,o2.y,o2.x+o2.c,o2.y+o2.h,7)
-	  if (o2.c < 30) then
-	  	anim(a,8,2,5)
-	  end
-	  enemy_draw()
-	
-	  --score
-	
-	  print("†",2,4,10)
-	  print(score,12,4,7)
-	
-	  --player
-	  player_anim(p)
-	
-	  trsr()
-	  p_move(particles,55,3,5)
-	 end
-	
-	 win()
-	 death()
-	else
-		rectfill(0,0,128,128,0)
-		rectfill(0,68,128,128,12)
-  spr(016,subm.x-subm.w/2,subm.y,2,2)
-		print("subreach", 48, 40, 7)
-		print("by devonorxi and rumpelcita", 10, 88, 7)
-		print("‹”‘ to move", 36,102, 7)
-		print("— to start", 42, 112, 7)
-	end
+ if state=="game" then
+  --map
+  rectfill(0,0,128,128,12)
+  map(0,0)
+
+  --o2
+  print("o2",o2.x-8,o2.y-1,7)
+  rectfill(o2.x,o2.y,o2.x+o2.w,o2.y+o2.h,1)
+  rectfill(o2.x,o2.y,o2.x+o2.c,o2.y+o2.h,7)
+  enemy_draw()
+
+  --score
+  print("\143",2,4,10)
+  print(score,12,4,7)
+
+  --player
+  player_anim(p)
+
+  trsr()
+  p_move(particles,55,3,5)
+ elseif state=="win" then
+  win()
+ elseif state=="death" then
+  death()
+elseif state=="title" then
+  title()
+ end
 end
 
 function player_anim(p)
@@ -190,16 +194,11 @@ function player_terrain_col()
  local ty0=flr(ny/8)
  local tx1=flr((nx+p.w-1)/8)
  local ty1=flr((ny+p.h-1)/8)
- col.u=false
- col.d=false
- col.l=false
- col.r=false
 
  --check up
  if(p.dy<0) then
   if(fget(mget(tx0,ty0),0)
    or fget(mget(tx1,ty0),0)) then
-    col.u=true
     p.y=(ty0+1)*8
     p.dy=0
     p.vy=0
@@ -216,7 +215,6 @@ end
  if(p.dy>0) then
   if(fget(mget(tx0,ty1),0)
    or fget(mget(tx1,ty1),0)) then
-    col.d=true
     p.y=ty0*8
     p.dy=0
     p.vy=0
@@ -233,7 +231,6 @@ end
  if(p.dx<0) then
   if(fget(mget(tx0,ty0),0)
    or fget(mget(tx0,ty1),0)) then
-     col.l=true
      p.x=(tx0+1)*8
      p.dx=0
      p.vx=0
@@ -250,7 +247,6 @@ end
  if(p.dx>0) then
   if(fget(mget(tx1,ty0),0)
    or fget(mget(tx1,ty1),0)) then
-    col.r=true
     p.x=tx0*8
     p.dx=0
     p.vx=0
@@ -268,7 +264,7 @@ end
 function calc_player_mov()
  p.dx=0
  p.dy=0
- if not p.pause then
+ if state=="game" then
   --local lx=p.x -- last x
   --local ly=p.y -- last y
   p.move = false
@@ -357,39 +353,33 @@ function drop_o2()
 end
 
 function death()
-	if not over then
-	 if o2.c==0 then
-	  if not endsong then
-	   music(12)
-	   endsong=true
-	  end
-	 	if not p.pause then
-		  p.pause=true
-	 	end
-			rectfill(0,0,128,128,0)
-			print("i'm so sorry, you're dead.", 14, 60, 7)
-	 end
-	end
+	rectfill(0,0,128,128,0)
+	print("i'm so sorry, you're dead.", 14, 60, 7)
+  print("press \142 to restart",14,84,7)
 end
 
 function win()
- if ctile(p,1) then
-  if not endsong then
-   music(13)
-   endsong=true
-  end
- 	p.pause=true
- 	over=true
   rectfill(0,0,128,128,0)
   print("you made it out alive!", 14, 60, 7)
   print("treasure:", 14, 68, 7)
-  print(score, 52, 68, 7)
- end
+  print("\143", 52, 68, 10)
+  print(score,62,68,7)
+  print("press \142" to restart,14,84,7)
+end
+
+function title()
+ rectfill(0,0,128,128,0)
+ rectfill(0,68,128,128,12)
+ spr(016,subm.x-subm.w/2,subm.y,2,2)
+ print("subreach", 48, 40, 7)
+ print("by devonorxi and rumpelcita", 10, 88, 7)
+ print("\139\148\145 to move", 36,102, 7)
+ print("\142 to start", 42, 112, 7)
 end
 
 function trsr()
  if ctile(p,2) then
-  print("Ž open",52,106,7)
+  print("\142 open",52,106,7)
   if btnp(4) then
    score+=1
    sfx(0)
@@ -429,14 +419,14 @@ function p_move(parts,sf,fn,sp)
  end)
 end
 __gfx__
-00000000000000000000000000111100001111000011110000111100001111000000900000000000000000000000000000000000000000000000000000000000
-00000000000000000000000001eeeee001eeeee001eeeee001eeeee001eeeee00009990000000000000000000000000000000000000000000000000000000000
-0070070000000000000a000001efff1001efff1001efff1001efff1001efff100099999000000000000000000000000000000000000000000000000000000000
-00077000000000000a444a0001efff1001efff1001efff1001efff1001efff100999999900000000000000000000000000000000000000000000000000000000
-000770000a444a000a444a0000099900000999000009990000099900000999000099999000000000000000000000000000000000000000000000000000000000
-007007000a4a4a00094449000004f4000004f4000004f4000004f4000004f4000099999000000000000000000000000000000000000000000000000000000000
-000000000aaaaa0009999900000dfd00000dfd80000dfd80008dfd00008dfd000099999000000000000000000000000000000000000000000000000000000000
-00000000044a4400044a440000080800000800000080000000000080000008000099999000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000111100001111000011110000111100001111000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000001eeeee001eeeee001eeeee001eeeee001eeeee00000000000000000000000000000000000000000000000000000000000000000
+0070070000000000000a000001efff1001efff1001efff1001efff1001efff100000000000000000000000000000000000000000000000000000000000000000
+00077000000000000a444a0001efff1001efff1001efff1001efff1001efff100000000000000000000000000000000000000000000000000000000000000000
+000770000a444a000a444a0000099900000999000009990000099900000999000000000000000000000000000000000000000000000000000000000000000000
+007007000a4a4a00094449000004f4000004f4000004f4000004f4000004f4000000000000000000000000000000000000000000000000000000000000000000
+000000000aaaaa0009999900000dfd00000dfd80000dfd80008dfd00008dfd000000000000000000000000000000000000000000000000000000000000000000
+00000000044a4400044a440000080800000800000080000000000080000008000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000aa00000000000000aa0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000aaa0000000000000aaa0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -557,7 +547,6 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
 __gff__
 0004000000000000000000000000000002020000000000000000000000000000020200000000000000000000000000000108080810100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -724,4 +713,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
