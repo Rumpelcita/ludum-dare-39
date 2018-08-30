@@ -1,8 +1,15 @@
 pico-8 cartridge // http://www.pico-8.com
-version 15
+version 16
 __lua__
 --globals
 state="title"
+
+chests={
+ {x=3,y=2},
+ {x=11,y=7},
+ {x=2,y=14},
+ {x=13,y=14}
+}
 
 enemies={
  {type="jelly",x=16,y=16,w=8,h=8,s=049,dmg=5},
@@ -10,20 +17,20 @@ enemies={
 }
 
 fish_enemies={}
-for i=0,2 do
- add(fish_enemies,{
-  type="fish",
-  x=rnd(128),
-  y=rnd(128),
-  w=8,
-  h=8,
-  s=52,
-  dmg=5,
-  s=0+flr(rnd(3)/2),
-  spd=0.25+rnd(3),
-  off=rnd(1),
-  c=6+flr(0.5+rnd(1))
- })
+ for i=0,2 do
+  add(fish_enemies,{
+   type="fish",
+   x=rnd(128),
+   y=rnd(128),
+   w=8,
+   h=8,
+   s=52,
+   dmg=5,
+   s=0+flr(rnd(3)/2),
+   spd=0.25+rnd(3),
+   off=rnd(1),
+   c=6+flr(0.5+rnd(1))
+  })
  end
 
  particles = {}
@@ -82,12 +89,12 @@ function _init()
  subm.y=0
  subm.w=16
  subm.h=9
+ 
+ for c in all(chests) do
+  mset(c.x,c.y,1)
+ end
 
  music(0)
-end
-
-function initialize()
-
 end
 
 function _update()
